@@ -14,13 +14,8 @@
 * Trzeba pobawić się parametrami modelu, może uda się dostać lepsze wyniki. ()
 * Czat wygenerował mi jakieś wykresy, ale w sumie to nie wiem co na nich jest XD. Do tego trzeba dodać jakieś krzywe treningowe i wykresy wizualizacyjne, żeby wyglądało profesjonalnie i było wiadomo o co chodzi. Jakieś porównanie ect...
 
-# Algorytm PQK-SVM - wersja 16.09.2026:
-Oto profesjonalny i wyczerpujący szablon pliku `README.md`, który idealnie podsumowuje całą architekturę, metodykę badawczą i strukturę kodu. Jest gotowy do wklejenia do Twojego repozytorium i napisany w tonie odpowiednim dla projektu naukowego.
-
 ---
-
-# QML WIG-Banki: Kwantowe Uczenie Maszynowe w Analizie Sektora Finansowego
-
+# Algorytm PQK-SVM - wersja 16.09.2026:
 ## Opis Projektu
 
 Projekt bada zastosowanie 5-kubitowego komputera kwantowego (IQM Odra/Spark) do przewidywania kierunku zmian giełdowego indeksu WIG-Banki w horyzoncie jednego tygodnia. Głównym celem jest weryfikacja, czy nieliniowe przekształcenia w przestrzeni kwantowej potrafią skuteczniej wychwycić rynkowe zależności niż standardowe algorytmy klasyczne (np. Support Vector Machine, Regresja Logistyczna).
