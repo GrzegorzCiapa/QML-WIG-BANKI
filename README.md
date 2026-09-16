@@ -71,3 +71,34 @@ Aby uruchomić kod, wymagane jest środowisko Python 3.9+ oraz zainstalowane bib
 2. Uruchom skrypt. Przy pierwszym uruchomieniu algorytm wymusi połączenie z fizycznym procesorem IQM, przetranspiluje obwody i wyśle zadania (batch) po `4000 shots` każde.
 3. Zrzut z komputera kwantowego zostanie zapisany na dysku. Każda kolejna ewaluacja w pętli Walk-Forward wczyta go w ułamek sekundy do optymalizacji hiperparametrów klasyfikatora.
 4. Na zakończenie wygenerowany zostanie graficzny **Dashboard Ostateczny** przedstawiający krzywe ROC i wierność odwzorowania rynku.
+
+Co do zrobienia?:
+
+### 1. Dynamiczny Tuning Hiperparametrów
+
+Obecnie klasyfikatory (klasyczny SVM i PQK) mają wpisane `C=5.0` na sztywno. Rynek finansowy jest bardzo zmienny, więc optymalny margines błędu klasyfikatora powinien się adaptować do bieżącego reżimu.
+
+* Zmodyfikuj pętlę Walk-Forward, aby przed wygenerowaniem predykcji (na oknie treningowym) uruchamiała wewnętrzną, zagnieżdżoną walidację krzyżową (np. `GridSearchCV`).
+* Niech algorytm sam w locie testuje siatkę parametrów `C` (np. 0.1, 1.0, 5.0, 10.0) i używa tego, który w danym roku giełdowym działał najlepiej.
+
+### 2. Architektura Obwodu Kwantowego (Ansatz Engineering)
+
+Twoja funkcja `build_base_ansatz` tworzy dokładnie jedną warstwę rotacji i jedną warstwę splątania (bramki CNOT).
+
+* Dodaj do funkcji parametr określający liczbę powtórzeń (głębokość obwodu).
+* Przeprowadź i zapisz eksperyment testujący obwód z 2 oraz 3 warstwami.
+* Sprawdź, w którym momencie głębszy obwód poprawia nieliniowość i wynik AUC, a kiedy generuje zbyt duży szum sprzętowy, który degraduje sygnał z Odry.
+
+### 3. Optymalizacja Progu Decyzyjnego
+
+Linijka z przypisaniem klasy zakłada symetryczny próg wejścia w pozycję wynoszący równo 50%. W zaawansowanych strategiach finansowych rzadko to się sprawdza.
+
+* Napisz funkcję, która wewnątrz okna treningowego szuka takiego progu prawdopodobieństwa (np. 0.54 dla wzrostów i 0.46 dla spadków), który maksymalizuje wskaźnik F1-Score.
+* Zastosuj ten dynamicznie wyuczony próg na danych testowych. Zmusi to algorytm do zajmowania pozycji tylko w momentach silnej pewności.
+
+### 4. Analiza Ważności Cech (Ablation Study)
+
+Recenzenci publikacji na pewno zapytają, który z pięciu banków i wskaźników makroekonomicznych ułatwił algorytmowi zadanie w największym stopniu.
+
+* Przygotuj skrypt "uszkadzający" obwód, który uruchamia ewaluację PQK pięć razy, za każdym razem wyłączając jeden z fizycznych kubitów z procesu pomiarowego.
+* Zmierz i zapisz spadek metryki AUC-ROC dla każdego usuniętego kubitu. Ten czynnik makro, którego wyłączenie najbardziej obniża skuteczność modelu, jest jego najważniejszym silnikiem.
