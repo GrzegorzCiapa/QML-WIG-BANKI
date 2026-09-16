@@ -72,7 +72,7 @@ Aby uruchomić kod, wymagane jest środowisko Python 3.9+ oraz zainstalowane bib
 3. Zrzut z komputera kwantowego zostanie zapisany na dysku. Każda kolejna ewaluacja w pętli Walk-Forward wczyta go w ułamek sekundy do optymalizacji hiperparametrów klasyfikatora.
 4. Na zakończenie wygenerowany zostanie graficzny **Dashboard Ostateczny** przedstawiający krzywe ROC i wierność odwzorowania rynku.
 
-Co do zrobienia?:
+## Co do zrobienia?:
 
 ### 1. Dynamiczny Tuning Hiperparametrów
 
