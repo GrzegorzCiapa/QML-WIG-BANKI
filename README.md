@@ -14,6 +14,65 @@
 * Trzeba pobawić się parametrami modelu, może uda się dostać lepsze wyniki. ()
 * Czat wygenerował mi jakieś wykresy, ale w sumie to nie wiem co na nich jest XD. Do tego trzeba dodać jakieś krzywe treningowe i wykresy wizualizacyjne, żeby wyglądało profesjonalnie i było wiadomo o co chodzi. Jakieś porównanie ect...
 
-Pisz mi na bieżąco co zrobiłeś i jak wpadniesz na pomysł co dalej robić to daj znać:)
+# Algorytm PQK-SVM - wersja 16.09.2026:
+Oto profesjonalny i wyczerpujący szablon pliku `README.md`, który idealnie podsumowuje całą architekturę, metodykę badawczą i strukturę kodu. Jest gotowy do wklejenia do Twojego repozytorium i napisany w tonie odpowiednim dla projektu naukowego.
 
-Odpoczywaj i pij wodę kurwa ten
+---
+
+# QML WIG-Banki: Kwantowe Uczenie Maszynowe w Analizie Sektora Finansowego
+
+## Opis Projektu
+
+Projekt bada zastosowanie 5-kubitowego komputera kwantowego (IQM Odra/Spark) do przewidywania kierunku zmian giełdowego indeksu WIG-Banki w horyzoncie jednego tygodnia. Głównym celem jest weryfikacja, czy nieliniowe przekształcenia w przestrzeni kwantowej potrafią skuteczniej wychwycić rynkowe zależności niż standardowe algorytmy klasyczne (np. Support Vector Machine, Regresja Logistyczna).
+
+Eksperyment obejmuje bezpośrednie porównanie klasycznych metod uczenia maszynowego z algorytmem kwantowym, uruchamianym zarówno w środowisku idealnego symulatora, jak i na fizycznym, zaszumionym sprzęcie QPU.
+
+## Architektura i Kodowanie Danych
+
+Projekt wykorzystuje metodę **Projected Quantum Kernel (PQK)**. 10 historycznych cech wejściowych (znormalizowanych wskaźników fundamentalnych i makroekonomicznych) zostało skompresowanych na 5 fizycznych kubitach za pomocą techniki **Dense Angle Encoding**.
+
+Stan każdego kubitu jest modyfikowany według wzoru:
+
+
+$$\vert{}\psi_i\rangle = R_z(\pi \cdot x_{makro}) R_y(\pi \cdot x_{bank}) \vert{}0\rangle$$
+
+### Mapowanie Cech na Kubity:
+
+| Kubit | Wycena Banku (Bramka $R_y$) | Czynnik Rynkowy (Bramka $R_z$) | Uzasadnienie |
+| --- | --- | --- | --- |
+| **0** | P/BV PKO BP | Stawka WIBOR 3M | Korelacja marży odsetkowej największego banku ze stopami proc. |
+| **1** | P/BV Pekao | Rentowność obligacji 10y | Wrażliwość dużego portfela papierów dłużnych na krzywą rentowności. |
+| **2** | P/BV Santander BP | Kurs EUR/PLN | Wpływ siły polskiego złotego na ocenę banku z globalnej grupy kapitałowej. |
+| **3** | P/BV ING BSK | Indeks WIG20 | Ścisły związek stabilnej wyceny komercyjnej z szerokim sentymentem giełdy. |
+| **4** | P/BV mBank | Zmienność (Z-Score) | Ekspozycja na ryzyko prawne (kredyty CHF) warunkująca najwyższą zmienność. |
+
+Zamiast kosztownego szacowania pełnego stanu kwantowego, model wylicza lokalne wartości oczekiwane obserwabli (X, Y, Z) na każdym z 5 kubitów, tworząc 15-wymiarowy wektor klasyczny, który następnie trafia do klasycznego klasyfikatora SVM z jądrem RBF.
+
+## Metodyka Ewaluacji
+
+* **Horyzont Predykcji:** 1 tydzień giełdowy.
+* **Walidacja:** Walk-Forward (Out-Of-Sample) z przesuwnym oknem treningowym wynoszącym 52 tygodnie (1 rok). Chroni to model przed "wyciekiem danych z przyszłości" (data leakage).
+* **Główne Metryki:** AUC-ROC (zdolność rozróżniania klas), F1-Score oraz Skumulowany Bilans Trafień (Equity Curve).
+
+## Wymagania Środowiskowe
+
+Aby uruchomić kod, wymagane jest środowisko Python 3.9+ oraz zainstalowane biblioteki:
+
+* `qiskit`, `qiskit-iqm`, `qiskit-aer`
+* `scikit-learn`, `pandas`, `numpy`, `matplotlib`
+* `python-dotenv`
+
+## Struktura Plików
+
+* `main.py` / `notebook.ipynb` – Główny skrypt eksperymentu badawczego.
+* `dataset_final.csv` – Zagregowane i znormalizowane dane tygodniowe dla banków i wskaźników makro.
+* `iqm_token.env` – Plik konfiguracyjny (zmienne `IQM_TOKEN` oraz `SERVER`) służący do autoryzacji z procesorem IQM Odra.
+* `phi_sim_ideal.npy` – Zapisane w pamięci podręcznej (cache) rzuty wektorów z symulatora bezszumowego.
+* `phi_real_odra.npy` – Wyniki rzutowania pobrane z fizycznego komputera kwantowego (tworzone/nadpisywane podczas strzałów na QPU).
+
+## Uruchomienie Eksperymentu
+
+1. Upewnij się, że plik `dataset_final.csv` oraz `iqm_token.env` znajdują się w tym samym katalogu (lub podkatalogu `dane/`).
+2. Uruchom skrypt. Przy pierwszym uruchomieniu algorytm wymusi połączenie z fizycznym procesorem IQM, przetranspiluje obwody i wyśle zadania (batch) po `4000 shots` każde.
+3. Zrzut z komputera kwantowego zostanie zapisany na dysku. Każda kolejna ewaluacja w pętli Walk-Forward wczyta go w ułamek sekundy do optymalizacji hiperparametrów klasyfikatora.
+4. Na zakończenie wygenerowany zostanie graficzny **Dashboard Ostateczny** przedstawiający krzywe ROC i wierność odwzorowania rynku.
