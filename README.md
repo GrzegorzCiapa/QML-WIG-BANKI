@@ -102,3 +102,5 @@ Recenzenci publikacji na pewno zapytają, który z pięciu banków i wskaźnikó
 
 * Przygotuj skrypt "uszkadzający" obwód, który uruchamia ewaluację PQK pięć razy, za każdym razem wyłączając jeden z fizycznych kubitów z procesu pomiarowego.
 * Zmierz i zapisz spadek metryki AUC-ROC dla każdego usuniętego kubitu. Ten czynnik makro, którego wyłączenie najbardziej obniża skuteczność modelu, jest jego najważniejszym silnikiem.
+
+* ### plus przetestowanie predykcji dla różnych horyzontów czasowych + analiza głębokości obwodu i qber
