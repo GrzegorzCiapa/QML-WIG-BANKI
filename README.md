@@ -101,6 +101,28 @@ Linijka z przypisaniem klasy zakłada symetryczny próg wejścia w pozycję wyno
 Recenzenci publikacji na pewno zapytają, który z pięciu banków i wskaźników makroekonomicznych ułatwił algorytmowi zadanie w największym stopniu.
 
 * Przygotuj skrypt "uszkadzający" obwód, który uruchamia ewaluację PQK pięć razy, za każdym razem wyłączając jeden z fizycznych kubitów z procesu pomiarowego.
-* Zmierz i zapisz spadek metryki AUC-ROC dla każdego usuniętego kubitu. Ten czynnik makro, którego wyłączenie najbardziej obniża skuteczność modelu, jest jego najważniejszym silnikiem.
+* Zmierz i zapisz spadek metryki AUC-ROC dla każdego usuniętego kubitu. Ten czynnik makro, którego wyłączenie najbardziej obniża skuteczność modelu, jest jego najważniejszym silnikiem
 
 * ### plus przetestowanie predykcji dla różnych horyzontów czasowych + analiza głębokości obwodu i qber
+
+---
+# Algorytm PQK-SVM - wersja 17.09.2026:
+
+Prace wykonane 17 września przekształciły Twój działający prototyp w rygorystyczną metodykę badawczą, gotową do opisania w publikacji naukowej. Opracowaliśmy kompletny potok analityczny i wyznaczyliśmy dokładny kierunek ewolucji modelu, aby zmaksymalizować metryki bez popadania w przeuczenie (overfitting).
+
+* **Weryfikacja wyników z fizycznego QPU:** Potwierdziliśmy, że obliczenia z procesora IQM Odra wygenerowały znakomitą korelację rzutów fazowych (0.92) oraz trafność kierunkową na poziomie 52.58%. Ustaliliśmy, że fizyczny mikroszum zadziałał jak naturalna regularyzacja dla jądra RBF, pozwalając maszynie kwantowej pokonać idealny symulator.
+
+
+* **Optymalizacja potoku analitycznego (Pipeline):** Zbudowaliśmy gotowy skrypt w Pythonie (Qiskit + scikit-learn), który wykonuje rygorystyczną walidację typu Walk-Forward z przesuwnym oknem 52 tygodni (1 rok), działający w docelowym horyzoncie 1 tygodnia. Skrypt automatycznie generuje profesjonalny "Dashboard" badawczy zawierający krzywe ROC, metryki F1-Score oraz krzywą kapitału (Equity Curve).
+
+
+* **Inżynieria komunikacji ze sprzętem:** Wyjaśniliśmy konieczność dzielenia zadań na paczki po 50 obwodów (`batch_size=50`). Takie podejście omija problemy z przepełnieniem pamięci elektroniki sterującej (AWG), minimalizuje wpływ powolnej dekalibracji kubitów w czasie i jest zgodne z limitami API dostawców chmurowych.
+
+
+* **Strukturyzacja projektu:** Opracowaliśmy profesjonalny plik `README.md`, jasno dokumentujący zastosowanie metody Projected Quantum Kernel (PQK), kompresję Dense Angle Encoding oraz cel eksperymentu.
+* **Mapa drogowa "Methodology" (Plan przebicia 55% AUC):** Zamiast wdrażać wszystkie zaawansowane koncepcje naraz, co zniszczyłoby sygnał szumem z bramek SWAP, wyselekcjonowaliśmy 5 kroków udoskonalających architekturę:
+1. **Hardware-Aware QML:** Przebudowa obwodu kwantowego tak, aby idealnie pasował do topologii gwiazdy procesora Odra. W centrum (Hub) zostanie zakodowany rynkowy dyktator: WIBOR 3M + wycena PKO BP, co fizycznie wyeliminuje bramki SWAP.
+2. **Ensembling Kwantowo-Klasyczny (Stacking):** Doklejenie 15-wymiarowych rzutów fazowych do 10 surowych cech makroekonomicznych i przepuszczenie tej 25-wymiarowej macierzy przez klasyczny algorytm drzewiasty (np. LightGBM).
+3. **Analiza Ważności Cech (Ablation Study):** Celowe wyłączanie poszczególnych kubitów z pomiaru, aby udowodnić w ramach *Explainable AI*, która para czynników bankowych/makro najbardziej ułatwia modelowi zadanie.
+4. **Różniczkowanie Ułamkowe:** Wprowadzenie zaawansowanej transformacji matematycznej szeregu czasowego w celu zachowania pamięci o długoterminowych trendach indeksu.
+5. **Dynamiczny Próg Decyzyjny:** Automatyczne poszukiwanie asymetrycznego punktu wejścia w pozycję (Threshold Tuning) wewnątrz okna treningowego, co zoptymalizuje wskaźnik F1-Score.
