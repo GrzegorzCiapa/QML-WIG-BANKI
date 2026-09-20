@@ -15,7 +15,7 @@ Na tym etapie powstał fundament całego potoku analitycznego.
 
 
 
-## Etap 2: Rygor Walidacyjny i Uszczelnienie Potoku (`Kod big_bank2)`)
+## Etap 2: Rygor Walidacyjny i Uszczelnienie Potoku (`Kod big_bank2)`) (ślepa droga)
 
 Ewolucja w kierunku eliminacji wycieku danych (data leakage) podczas strojenia modelu.
 
@@ -29,7 +29,7 @@ Ewolucja w kierunku eliminacji wycieku danych (data leakage) podczas strojenia m
 
 
 
-## Etap 3: Architektura Obwodu i System Checkpointów (`Kod big_bank3)`)
+## Etap 3: Architektura Obwodu i System Checkpointów (`Kod big_bank3)`) (ślepa droga)
 
 Testowanie wpływu głębokości obwodu kwantowego na jakość predykcji.
 
@@ -61,7 +61,7 @@ Pomiędzy wersjami wdrożono kluczową architektoniczną zmianę – *Star Topol
 
 ---
 
-## Etap 5: Misja Ratunkowa dla Drzew Decyzyjnych (`Kod big_bank5)`)
+## Etap 5: Misja Ratunkowa dla Drzew Decyzyjnych (`Kod big_bank5)`) (ślepa droga)
 
 Eksperymentowanie z klasyfikatorami opartymi o drzewa w przestrzeni kwantowej.
 
@@ -75,7 +75,7 @@ Eksperymentowanie z klasyfikatorami opartymi o drzewa w przestrzeni kwantowej.
 
 
 
-## Etap 6: Procesy Gaussowskie (`Kod big_bank6)`)
+## Etap 6: Procesy Gaussowskie (`Kod big_bank6)`) (ślepa droga)
 
 Eksploracja modeli probabilistycznych opartych na topologii gwiazdy.
 
