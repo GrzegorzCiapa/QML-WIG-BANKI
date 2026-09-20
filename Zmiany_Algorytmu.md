@@ -1,128 +1,110 @@
-# QML-WIG20
+## Etap 1: Inżynieria Danych i Pierwszy Prototyp (`Kod big_bank1)`)
 
-### Co jest zrobione:
-* Wstępnie postawiłem model kwantowy, który normalnie się uczy i nawet sensownie ewaluuje w pętli kroczącej (cokolwiek to znaczy XD).
-* Wrzuciłem kod na Odrę. 
-* Wyniki są w pliku `dane/phi_odra_wig_banki.npy`. Nie ma sensu znowu tego wrzucać, liczyło się długo i robiłbym to tylko jak zmienimy strukturę modelu.
-* Na gotowym pliku z rzutami można od ręki odpalać klasyfikator i bawić się parametrami.
+Na tym etapie powstał fundament całego potoku analitycznego.
 
-### Wyniki na ten moment:
-* Średnia korelacja rzutów Odra vs idealny symulator: `0.9200` O dziwo zajebisty wynik.
-* Directional Accuracy (QPU Odra):** `52.58%` (dla porównania: klasyczna regresja logistyczna wypluła `50.80%`, analityczny symulator `50.98%`). Naturalny szum Odry zadziałał trochę jak regularyzacja(?) i podbił wynik względem idealnej symulacji ale nie wiem czy to dobrze.
-
-### Co jest dalej do zrobienia:
-* Trzeba pobawić się parametrami modelu, może uda się dostać lepsze wyniki. ()
-* Czat wygenerował mi jakieś wykresy, ale w sumie to nie wiem co na nich jest XD. Do tego trzeba dodać jakieś krzywe treningowe i wykresy wizualizacyjne, żeby wyglądało profesjonalnie i było wiadomo o co chodzi. Jakieś porównanie ect...
-
----
-# Algorytm PQK-SVM - wersja 16.09.2026:
-## Opis Projektu
-
-Projekt bada zastosowanie 5-kubitowego komputera kwantowego (IQM Odra/Spark) do przewidywania kierunku zmian giełdowego indeksu WIG-Banki w horyzoncie jednego tygodnia. Głównym celem jest weryfikacja, czy nieliniowe przekształcenia w przestrzeni kwantowej potrafią skuteczniej wychwycić rynkowe zależności niż standardowe algorytmy klasyczne (np. Support Vector Machine, Regresja Logistyczna).
-
-Eksperyment obejmuje bezpośrednie porównanie klasycznych metod uczenia maszynowego z algorytmem kwantowym, uruchamianym zarówno w środowisku idealnego symulatora, jak i na fizycznym, zaszumionym sprzęcie QPU.
-
-## Architektura i Kodowanie Danych
-
-Projekt wykorzystuje metodę **Projected Quantum Kernel (PQK)**. 10 historycznych cech wejściowych (znormalizowanych wskaźników fundamentalnych i makroekonomicznych) zostało skompresowanych na 5 fizycznych kubitach za pomocą techniki **Dense Angle Encoding**.
-
-Stan każdego kubitu jest modyfikowany według wzoru:
+* Skrypt ładuje historyczne wyceny P/BV pięciu polskich banków, z których buduje syntetyczny benchmark sektorowy WIG-Banki (baza 1000 pkt).
 
 
-$$\vert{}\psi_i\rangle = R_z(\pi \cdot x_{makro}) R_y(\pi \cdot x_{bank}) \vert{}0\rangle$$
+* Obliczana jest 20-dniowa krocząca zmienność indeksu WIG20 (Z-score) oraz wczytywane są dane makroekonomiczne (WIBOR, EURPLN, rentowność obligacji).
 
-### Mapowanie Cech na Kubity:
 
-| Kubit | Wycena Banku (Bramka $R_y$) | Czynnik Rynkowy (Bramka $R_z$) | Uzasadnienie |
-| --- | --- | --- | --- |
-| **0** | P/BV PKO BP | Stawka WIBOR 3M | Korelacja marży odsetkowej największego banku ze stopami proc. |
-| **1** | P/BV Pekao | Rentowność obligacji 10y | Wrażliwość dużego portfela papierów dłużnych na krzywą rentowności. |
-| **2** | P/BV Santander BP | Kurs EUR/PLN | Wpływ siły polskiego złotego na ocenę banku z globalnej grupy kapitałowej. |
-| **3** | P/BV ING BSK | Indeks WIG20 | Ścisły związek stabilnej wyceny komercyjnej z szerokim sentymentem giełdy. |
-| **4** | P/BV mBank | Zmienność (Z-Score) | Ekspozycja na ryzyko prawne (kredyty CHF) warunkująca najwyższą zmienność. |
+* Zbudowano pierwszą wersję 5-kubitowego obwodu w oparciu o technikę Dense Angle Encoding (1 warstwa rotacji $R_y$, $R_z$ i 1 warstwa splątania).
 
-Zamiast kosztownego szacowania pełnego stanu kwantowego, model wylicza lokalne wartości oczekiwane obserwabli (X, Y, Z) na każdym z 5 kubitów, tworząc 15-wymiarowy wektor klasyczny, który następnie trafia do klasycznego klasyfikatora SVM z jądrem RBF.
 
-## Metodyka Ewaluacji
+* Skrypt uruchamia ewaluację Out-Of-Sample, zestawiając klasyczną regresję logistyczną z modelem Projected Quantum Kernel (PQK) działającym na idealnym symulatorze oraz fizycznym procesorze IQM Odra, zapisując zrzut sprzętowy do pliku `.npy`.
 
-* **Horyzont Predykcji:** 1 tydzień giełdowy.
-* **Walidacja:** Walk-Forward (Out-Of-Sample) z przesuwnym oknem treningowym wynoszącym 52 tygodnie (1 rok). Chroni to model przed "wyciekiem danych z przyszłości" (data leakage).
-* **Główne Metryki:** AUC-ROC (zdolność rozróżniania klas), F1-Score oraz Skumulowany Bilans Trafień (Equity Curve).
 
-## Wymagania Środowiskowe
 
-Aby uruchomić kod, wymagane jest środowisko Python 3.9+ oraz zainstalowane biblioteki:
+## Etap 2: Rygor Walidacyjny i Uszczelnienie Potoku (`Kod big_bank2)`)
 
-* `qiskit`, `qiskit-iqm`, `qiskit-aer`
-* `scikit-learn`, `pandas`, `numpy`, `matplotlib`
-* `python-dotenv`
+Ewolucja w kierunku eliminacji wycieku danych (data leakage) podczas strojenia modelu.
 
-## Struktura Plików
+* Do kodu wprowadzono struktury `Pipeline`, co gwarantuje, że procesy skalowania (np. `MinMaxScaler`) zachodzą ściśle na danych treningowych w każdej iteracji, chroniąc przed "zajrzeniem" w przyszłość.
 
-* `main.py` / `notebook.ipynb` – Główny skrypt eksperymentu badawczego.
-* `dataset_final.csv` – Zagregowane i znormalizowane dane tygodniowe dla banków i wskaźników makro.
-* `iqm_token.env` – Plik konfiguracyjny (zmienne `IQM_TOKEN` oraz `SERVER`) służący do autoryzacji z procesorem IQM Odra.
-* `phi_sim_ideal.npy` – Zapisane w pamięci podręcznej (cache) rzuty wektorów z symulatora bezszumowego.
-* `phi_real_odra.npy` – Wyniki rzutowania pobrane z fizycznego komputera kwantowego (tworzone/nadpisywane podczas strzałów na QPU).
 
-## Uruchomienie Eksperymentu
+* Zaimplementowano siatki `RandomizedSearchCV` sprzężone z obiektem `TimeSeriesSplit` do dynamicznego doboru hiperparametrów (np. parametru $C$ oraz $\gamma$ dla jądra RBF), wykorzystując obszar pod krzywą ROC jako główną metrykę optymalizacyjną.
 
-1. Upewnij się, że plik `dataset_final.csv` oraz `iqm_token.env` znajdują się w tym samym katalogu (lub podkatalogu `dane/`).
-2. Uruchom skrypt. Przy pierwszym uruchomieniu algorytm wymusi połączenie z fizycznym procesorem IQM, przetranspiluje obwody i wyśle zadania (batch) po `4000 shots` każde.
-3. Zrzut z komputera kwantowego zostanie zapisany na dysku. Każda kolejna ewaluacja w pętli Walk-Forward wczyta go w ułamek sekundy do optymalizacji hiperparametrów klasyfikatora.
-4. Na zakończenie wygenerowany zostanie graficzny **Dashboard Ostateczny** przedstawiający krzywe ROC i wierność odwzorowania rynku.
 
-## Co do zrobienia?:
+* Okno treningowe (Walk-Forward) wydłużono do 104 tygodni, zapewniając algorytmom klasycznym dłuższą historię uczenia.
 
-### 1. Dynamiczny Tuning Hiperparametrów
 
-Obecnie klasyfikatory (klasyczny SVM i PQK) mają wpisane `C=5.0` na sztywno. Rynek finansowy jest bardzo zmienny, więc optymalny margines błędu klasyfikatora powinien się adaptować do bieżącego reżimu.
 
-* Zmodyfikuj pętlę Walk-Forward, aby przed wygenerowaniem predykcji (na oknie treningowym) uruchamiała wewnętrzną, zagnieżdżoną walidację krzyżową (np. `GridSearchCV`).
-* Niech algorytm sam w locie testuje siatkę parametrów `C` (np. 0.1, 1.0, 5.0, 10.0) i używa tego, który w danym roku giełdowym działał najlepiej.
+## Etap 3: Architektura Obwodu i System Checkpointów (`Kod big_bank3)`)
 
-### 2. Architektura Obwodu Kwantowego (Ansatz Engineering)
+Testowanie wpływu głębokości obwodu kwantowego na jakość predykcji.
 
-Twoja funkcja `build_base_ansatz` tworzy dokładnie jedną warstwę rotacji i jedną warstwę splątania (bramki CNOT).
+* Funkcję generującą ansatz rozbudowano o parametr `reps`, pozwalając na powielanie warstw splątania. Badano warianty z 1, 2 oraz 3 warstwami w poszukiwaniu momentu, gdzie szum fizyczny (decoherence) przykrywa korzyści ze zwiększonej nieliniowości.
 
-* Dodaj do funkcji parametr określający liczbę powtórzeń (głębokość obwodu).
-* Przeprowadź i zapisz eksperyment testujący obwód z 2 oraz 3 warstwami.
-* Sprawdź, w którym momencie głębszy obwód poprawia nieliniowość i wynik AUC, a kiedy generuje zbyt duży szum sprzętowy, który degraduje sygnał z Odry.
 
-### 3. Optymalizacja Progu Decyzyjnego
+* Ze względu na bardzo długi czas oczekiwania na wyniki z QPU (timeouty), wprowadzono solidny mechanizm odzyskiwania stanu (`qpu_checkpoint.pkl`). System co 50 zadań zapisuje pobrane paczki (batches) na dysk, umożliwiając bezpieczne wznowienie pętli po błędzie API.
 
-Linijka z przypisaniem klasy zakłada symetryczny próg wejścia w pozycję wynoszący równo 50%. W zaawansowanych strategiach finansowych rzadko to się sprawdza.
 
-* Napisz funkcję, która wewnątrz okna treningowego szuka takiego progu prawdopodobieństwa (np. 0.54 dla wzrostów i 0.46 dla spadków), który maksymalizuje wskaźnik F1-Score.
-* Zastosuj ten dynamicznie wyuczony próg na danych testowych. Zmusi to algorytm do zajmowania pozycji tylko w momentach silnej pewności.
 
-### 4. Analiza Ważności Cech (Ablation Study)
+## Etap 4: Sztywne Skalowanie Causalne i Weryfikacja Statystyczna (`Kod big_bank4)`)
 
-Recenzenci publikacji na pewno zapytają, który z pięciu banków i wskaźników makroekonomicznych ułatwił algorytmowi zadanie w największym stopniu.
+Całkowita izolacja predykcji od danych z przyszłości oraz wprowadzenie rygoru akademickiego.
 
-* Przygotuj skrypt "uszkadzający" obwód, który uruchamia ewaluację PQK pięć razy, za każdym razem wyłączając jeden z fizycznych kubitów z procesu pomiarowego.
-* Zmierz i zapisz spadek metryki AUC-ROC dla każdego usuniętego kubitu. Ten czynnik makro, którego wyłączenie najbardziej obniża skuteczność modelu, jest jego najważniejszym silnikiem
+* Wdrożono zewnętrzne mapowanie kwantowe ze sztywnymi, narzuconymi z góry granicami transformacji (`lower_bounds` i `upper_bounds`), co ostatecznie rozwiązało problem look-ahead bias w skalowaniu i zmapowało cechy na sferę od $0$ do $2\pi$.
 
-* ### plus przetestowanie predykcji dla różnych horyzontów czasowych + analiza głębokości obwodu i qber
+
+* Rozszerzono pętlę walidacyjną o Nested Time-Series CV z `GridSearchCV` na zewnętrznym i wewnętrznym etapie.
+
+
+* Uwiarygodniono wyniki testem istotności statystycznej McNemara oraz generowaniem 95% przedziałów ufności dla AUC metodą Bootstrap.
+
+
 
 ---
-# Algorytm PQK-SVM - wersja 17.09.2026:
 
-Prace wykonane 17 września przekształciły Twój działający prototyp w rygorystyczną metodykę badawczą, gotową do opisania w publikacji naukowej. Opracowaliśmy kompletny potok analityczny i wyznaczyliśmy dokładny kierunek ewolucji modelu, aby zmaksymalizować metryki bez popadania w przeuczenie (overfitting).
+**Topologia Gwiazdy i Ablation Study (Etap Przejściowy)**
+Pomiędzy wersjami wdrożono kluczową architektoniczną zmianę – *Star Topology*. Aby zredukować błędy fizyczne wynikające z bramek SWAP, zmodyfikowano ansatz tak, aby wszystkie połączenia wychodziły z Kubitu 1 (HUB), do którego przypisano kluczową dla modelu parę (Pekao + Obligacje 10Y). Przeprowadzono metodą *Ablation Study* "uszkadzanie" kolejnych kubitów, badając, jak wyłączenie danego obszaru wpływa na ostateczny spadek AUC. Zaimplementowano również Causal Rolling MinMax (normalizację kroczącą z okna 52 tygodni).
 
-* **Weryfikacja wyników z fizycznego QPU:** Potwierdziliśmy, że obliczenia z procesora IQM Odra wygenerowały znakomitą korelację rzutów fazowych (0.92) oraz trafność kierunkową na poziomie 52.58%. Ustaliliśmy, że fizyczny mikroszum zadziałał jak naturalna regularyzacja dla jądra RBF, pozwalając maszynie kwantowej pokonać idealny symulator.
+---
+
+## Etap 5: Misja Ratunkowa dla Drzew Decyzyjnych (`Kod big_bank5)`)
+
+Eksperymentowanie z klasyfikatorami opartymi o drzewa w przestrzeni kwantowej.
+
+* Surowe rzuty ortogonalne $X, Y, Z$ generowane przez QPU okazały się kłopotliwe dla klasyfikatora XGBoost, dlatego zaprojektowano transformację `raw_to_spherical`.
 
 
-* **Optymalizacja potoku analitycznego (Pipeline):** Zbudowaliśmy gotowy skrypt w Pythonie (Qiskit + scikit-learn), który wykonuje rygorystyczną walidację typu Walk-Forward z przesuwnym oknem 52 tygodni (1 rok), działający w docelowym horyzoncie 1 tygodnia. Skrypt automatycznie generuje profesjonalny "Dashboard" badawczy zawierający krzywe ROC, metryki F1-Score oraz krzywą kapitału (Equity Curve).
+* Model zaczął przekształcać rzuty fizyczne na współrzędne sferyczne: promień $r$ (wskaźnik dekoherencji), kąt polarny $\theta$ oraz kąt azymutalny $\phi$.
 
 
-* **Inżynieria komunikacji ze sprzętem:** Wyjaśniliśmy konieczność dzielenia zadań na paczki po 50 obwodów (`batch_size=50`). Takie podejście omija problemy z przepełnieniem pamięci elektroniki sterującej (AWG), minimalizuje wpływ powolnej dekalibracji kubitów w czasie i jest zgodne z limitami API dostawców chmurowych.
+* W połączeniu z restrykcyjną regularyzacją (`reg_lambda=50`, `max_depth=1`) pozwoliło to XGBoostowi wycinać sensowne reguły decyzyjne z danych sprzętowych.
 
 
-* **Strukturyzacja projektu:** Opracowaliśmy profesjonalny plik `README.md`, jasno dokumentujący zastosowanie metody Projected Quantum Kernel (PQK), kompresję Dense Angle Encoding oraz cel eksperymentu.
-* **Mapa drogowa "Methodology" (Plan przebicia 55% AUC):** Zamiast wdrażać wszystkie zaawansowane koncepcje naraz, co zniszczyłoby sygnał szumem z bramek SWAP, wyselekcjonowaliśmy 5 kroków udoskonalających architekturę:
-1. **Hardware-Aware QML:** Przebudowa obwodu kwantowego tak, aby idealnie pasował do topologii gwiazdy procesora Odra. W centrum (Hub) zostanie zakodowany rynkowy dyktator: WIBOR 3M + wycena PKO BP, co fizycznie wyeliminuje bramki SWAP.
-2. **Ensembling Kwantowo-Klasyczny (Stacking):** Doklejenie 15-wymiarowych rzutów fazowych do 10 surowych cech makroekonomicznych i przepuszczenie tej 25-wymiarowej macierzy przez klasyczny algorytm drzewiasty (np. LightGBM).
-3. **Analiza Ważności Cech (Ablation Study):** Celowe wyłączanie poszczególnych kubitów z pomiaru, aby udowodnić w ramach *Explainable AI*, która para czynników bankowych/makro najbardziej ułatwia modelowi zadanie.
-4. **Różniczkowanie Ułamkowe:** Wprowadzenie zaawansowanej transformacji matematycznej szeregu czasowego w celu zachowania pamięci o długoterminowych trendach indeksu.
-5. **Dynamiczny Próg Decyzyjny:** Automatyczne poszukiwanie asymetrycznego punktu wejścia w pozycję (Threshold Tuning) wewnątrz okna treningowego, co zoptymalizuje wskaźnik F1-Score.
+
+## Etap 6: Procesy Gaussowskie (`Kod big_bank6)`)
+
+Eksploracja modeli probabilistycznych opartych na topologii gwiazdy.
+
+* Zamieniono Support Vector Machine na `GaussianProcessClassifier` wykorzystujący jądro RBF.
+
+
+* Przesunięcie skupiło się na Bayesowskiej naturze GPC, która lepiej radzi sobie z wygładzaniem szumu fizycznego pochodzącego z procesora Odra podczas generowania wysoce pewnych map prawdopodobieństw.
+
+
+* Następujący po tym wariant hybrydowy (kolejny snippet) połączył kwantowy QPU SVM, klasyczny Random Forest i klasyczny GPC z jądrem Matern za pomocą "Soft Voting", tworząc ostateczny komitet decyzyjny odporny na pojedyncze błędy (50% wagi dla QPU, po 25% dla klasyki).
+
+
+
+## Etap 7: Odporność Potoku i Probabilistyka (`Kod big_bank7)`)
+
+Refaktoryzacja systemu nastawiona na maksymalną stabilność wykonania.
+
+* Zabezpieczono łączenie z chmurą – skrypt łapie wyjątki API i w razie krytycznej awarii automatycznie przerzuca obciążenie transpilacji na awaryjny `AerSimulator`.
+
+
+* Odświeżono podejście Walk-Forward, wracając do Support Vector Machine, ale precyzyjnie wykorzystując generowanie gładkich prawdopodobieństw z jądra RBF (Platt Scaling) zamiast twardych granic decyzyjnych.
+
+
+
+## Etap 8: Algorytmy Genetyczne i Feature Map Optimization (`Kod big_bank8)`)
+
+Ostateczna ewolucja w postaci dynamicznego poszukiwania globalnego ekstremum.
+
+* Wprowadzono algorytm genetyczny (`scipy.optimize.differential_evolution`), który w sposób zautomatyzowany poszukuje idealnych mnożników wag (od $0.0$ do $1.0$) dla czterech zewnętrznych kubitów topologii gwiazdy.
+
+
+* Po wyliczeniu najkorzystniejszej Feature Mapy system przesyła zmodyfikowany wektor na QPU, a następnie trenuje klasyfikator. Dodano w locie optymalizację progu decyzyjnego, co wyciska maksymalny poziom wskaźnika Accuracy w zmiennych środowiskach rynkowych.
