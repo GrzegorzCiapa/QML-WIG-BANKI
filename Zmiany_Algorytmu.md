@@ -11,10 +11,10 @@
 
  — **Ślepa droga**
 
-* Do kodu wprowadzono struktury `Pipeline`, co gwarantuje, że procesy skalowania (np. `MinMaxScaler`) zachodzą ściśle na danych treningowych w każdej iteracji, chroniąc przed "zajrzeniem" w przyszłość.
-* Zaimplementowano siatki `RandomizedSearchCV` sprzężone z obiektem `TimeSeriesSplit` do dynamicznego doboru hiperparametrów (np. parametru $C$ oraz $\gamma$ dla jądra RBF), wykorzystując obszar pod krzywą ROC jako główną metrykę optymalizacyjną.
-* Okno treningowe (Walk-Forward) wydłużono do 104 tygodni, zapewniając algorytmom klasycznym dłuższą historię uczenia.
-
+Architektura izolacji danych (Pipeline): Do potoku wprowadzono obiekty Pipeline, co zagwarantowało, że transformacje cech zachodziły ściśle wewnątrz bieżącego okna treningowego (dla modeli klasycznych użyto MinMaxScaler(), a dla projekcji kwantowych StandardScaler()), eliminując błąd wycieku informacji (data leakage).
+Wielowymiarowy tuning kroczący (RandomizedSearchCV + TimeSeriesSplit): W każdym kroku procedury Walk-Forward hiperparametry były dobierane dynamicznie z użyciem 5-krotnego podziału szeregu czasowego. Siatka obejmowała regularyzację C, parametr skali γ (dla jądra RBF) oraz wagowanie klas (class_weight), optymalizowane bezpośrednio pod kątem maksymalizacji wskaźnika ROC AUC.
+Rozszerzenie horyzontu treningowego (104 tygodnie): Okno bazowe wydłużono z 52 do 104 tygodni (2 lata), aby algorytmom optymalizacyjnym dostarczyć wystarczającą próbę do podziałów walidacji krzyżowej bez drastycznego ubytku danych uczących.
+Wnioski badawcze („Ślepa droga” i niestacjonarność rynku): Rygorystyczny tuning obnażył niestacjonarny charakter rynku finansowego — optymalne parametry dopasowywały się do przeszłego reżimu, prowadząc do zjawiska ujemnego transferu i spadku AUC poniżej progu losowego (0.46–0.49). Mimo ogólnego pogorszenia metryk, fizyczne QPU utrzymało najwyższy wynik separacji w zestawieniu (AUC=0.4891) oraz dodatni bilans trafień w analizie Equity Curve, podczas gdy modele klasyczne zaliczyły głębokie obsunięcia.
 ## Etap 3: Architektura Obwodu i System Checkpointów (`big_bank_3)Warstwy`)
 
  — **Ślepa droga**
