@@ -15,7 +15,7 @@ Na tym etapie powstał fundament całego potoku analitycznego.
 
 
 
-## Etap 2: Rygor Walidacyjny i Uszczelnienie Potoku (`Kod big_bank2)`)  <span style="color: red;">Ślepa droga</span>
+## Etap 2: Rygor Walidacyjny i Uszczelnienie Potoku (`Kod big_bank2)`)  (ślepa droga)
 
 
 Ewolucja w kierunku eliminacji wycieku danych (data leakage) podczas strojenia modelu.
