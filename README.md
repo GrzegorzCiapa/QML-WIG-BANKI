@@ -1,4 +1,4 @@
-# QML-WIG20
+# QML-WIG-BANKI
 
 ### Co jest zrobione:
 * Wstępnie postawiłem model kwantowy, który normalnie się uczy i nawet sensownie ewaluuje w pętli kroczącej (cokolwiek to znaczy XD).
